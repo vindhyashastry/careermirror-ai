@@ -69,6 +69,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 export const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
+  // Use API_BASE for relative URLs
+  const finalUrl = url.startsWith('/') ? `${API_BASE}${url}` : url;
+
   const headers: Record<string, string> = {
     ...(options.headers as Record<string, string> || {}),
   };
@@ -77,7 +80,7 @@ export const authFetch = async (url: string, options: RequestInit = {}) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  return fetch(url, {
+  return fetch(finalUrl, {
     ...options,
     headers
   });

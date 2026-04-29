@@ -20,7 +20,7 @@ export const PracticeSession = () => {
     // Fetch from backend
     try {
       console.log('Fetching practice questions from backend...');
-      const response = await authFetch(`http://127.0.0.1:8000/practice-questions?role=Backend&weak_skills=${gaps.join(',')}`);
+      const response = await authFetch(`/practice-questions?role=Backend&weak_skills=${gaps.join(',')}`);
       
       const data = await response.json();
       console.log('Backend response from /practice-questions:', data);

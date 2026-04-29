@@ -25,7 +25,7 @@ export const ResumeUpload = () => {
 
     try {
       console.log('Uploading resume to backend...');
-      const response = await authFetch('http://127.0.0.1:8000/upload-resume', {
+      const response = await authFetch('/upload-resume', {
         method: 'POST',
         body: formData,
       });

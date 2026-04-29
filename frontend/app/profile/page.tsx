@@ -40,7 +40,7 @@ export default function ProfilePage() {
 
   const fetchResumes = async () => {
     try {
-      const res = await authFetch(`${API_BASE}/my-resumes`);
+      const res = await authFetch(`/my-resumes`);
       if (res.ok) {
         const data = await res.json();
         setResumes(data);
@@ -60,7 +60,7 @@ export default function ProfilePage() {
     const ci = careerInterests.split(',').map(c => c.trim()).filter(Boolean);
     
     try {
-      const res = await authFetch(`${API_BASE}/me`, {
+      const res = await authFetch(`/me`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

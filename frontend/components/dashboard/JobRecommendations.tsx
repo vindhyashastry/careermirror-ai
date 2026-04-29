@@ -24,7 +24,7 @@ export const JobRecommendations = () => {
 
       setLoading(true);
       try {
-        const response = await authFetch(`http://127.0.0.1:8000/match-jobs?resume_id=${resumeId}`);
+        const response = await authFetch(`/match-jobs?resume_id=${resumeId}`);
         const data = await response.json();
         setJobs(data);
       } catch (error) {

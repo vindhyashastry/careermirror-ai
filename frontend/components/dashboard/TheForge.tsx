@@ -160,12 +160,12 @@ export const TheForge = () => {
 
     try {
       // Fetch initial Easy questions (Reduced count for speed on CPU)
-      const res = await authFetch(`${API_BASE}/arena/questions?subject=${sub}&difficulty=easy&count=5`);
+      const res = await authFetch(`/arena/questions?subject=${sub}&difficulty=easy&count=5`);
       const data = await res.json();
 
       if (!Array.isArray(data) || data.length === 0) {
         // One retry silently
-        const retry = await authFetch(`${API_BASE}/arena/questions?subject=${sub}&difficulty=easy&count=5`);
+        const retry = await authFetch(`/arena/questions?subject=${sub}&difficulty=easy&count=5`);
         const retryData = await retry.json();
         setQuestions(Array.isArray(retryData) ? retryData : []);
       } else {
@@ -236,14 +236,14 @@ export const TheForge = () => {
     try {
       // Collect all current question topics/texts to avoid repeats
       const excludeStr = encodeURIComponent(questions.map(q => q.question).join('|'));
-      const res = await authFetch(`${API_BASE}/arena/questions?subject=${subject}&difficulty=${diff}&count=5&exclude=${excludeStr}`);
+      const res = await authFetch(`/arena/questions?subject=${subject}&difficulty=${diff}&count=5&exclude=${excludeStr}`);
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
         setQuestions(prev => [...prev, ...data]);
         if (diff === 'medium') setDifficulty('medium');
       } else {
         // Retry
-        const retry = await authFetch(`${API_BASE}/arena/questions?subject=${subject}&difficulty=${diff}&count=5`);
+        const retry = await authFetch(`/arena/questions?subject=${subject}&difficulty=${diff}&count=5`);
         const retryData = await retry.json();
         if (Array.isArray(retryData)) setQuestions(prev => [...prev, ...retryData]);
       }
@@ -260,7 +260,7 @@ export const TheForge = () => {
     if (timerRef.current) clearInterval(timerRef.current);
 
     try {
-      const res = await authFetch(`${API_BASE}/arena/scenarios?subject=${subject}&count=3`);
+      const res = await authFetch(`/arena/scenarios?subject=${subject}&count=3`);
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
         setScenarios(data);
@@ -285,7 +285,7 @@ export const TheForge = () => {
     if (!currentScenario || testing) return;
     setTesting(true);
     try {
-      const res = await authFetch(`http://127.0.0.1:8000/arena/evaluate`, {
+      const res = await authFetch(`/arena/evaluate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -315,7 +315,7 @@ export const TheForge = () => {
     setLoading(true);
     setLoadingMessage('AI is evaluating your solution...');
     try {
-      const res = await authFetch(`http://127.0.0.1:8000/arena/evaluate`, {
+      const res = await authFetch(`/arena/evaluate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -365,7 +365,7 @@ export const TheForge = () => {
 
   const saveScore = async (score: number) => {
     try {
-      await authFetch(`${API_BASE}/practice/save`, {
+      await authFetch(`/practice/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ score })

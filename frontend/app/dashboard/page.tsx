@@ -29,7 +29,7 @@ export default function DashboardOverview() {
 
   const fetchData = async () => {
     try {
-      const res = await authFetch(`${API_BASE}/dashboard-data`);
+      const res = await authFetch(`/dashboard-data`);
       const json = await res.json();
       setData(json);
       
@@ -57,7 +57,7 @@ export default function DashboardOverview() {
   const handleRetry = async () => {
     setReanalyzing(true);
     try {
-      const res = await authFetch(`${API_BASE}/reanalyze-resume`, {
+      const res = await authFetch(`/reanalyze-resume`, {
         method: 'POST'
       });
       if (res.ok) {
@@ -81,7 +81,7 @@ export default function DashboardOverview() {
     if (!jdText.trim()) return;
     setMatchingJd(true);
     try {
-      const res = await authFetch(`${API_BASE}/match-jd`, {
+      const res = await authFetch(`/match-jd`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ jd_text: jdText })

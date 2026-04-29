@@ -28,7 +28,7 @@ export const AIAssistant = () => {
     setLoading(true);
     try {
       // First, get the raw metrics to show in chat
-      const res = await authFetch(`${API_BASE}/dashboard-data`);
+      const res = await authFetch(`/dashboard-data`);
       const data = await res.json();
 
       if (!res.ok) throw new Error('Failed to fetch data');
@@ -42,7 +42,7 @@ export const AIAssistant = () => {
       setMessages(prev => [...prev, { role: 'assistant', content: msg }]);
 
       // Trigger automatic download
-      const reportRes = await authFetch(`${API_BASE}/assistant/ats-report`);
+      const reportRes = await authFetch(`/assistant/ats-report`);
       if (reportRes.ok) {
         const blob = await reportRes.blob();
         const url = window.URL.createObjectURL(blob);
@@ -71,7 +71,7 @@ export const AIAssistant = () => {
     setLoading(true);
 
     try {
-      const res = await authFetch(`${API_BASE}/assistant/chat`, {
+      const res = await authFetch(`/assistant/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userMessage })

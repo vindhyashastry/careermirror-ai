@@ -23,8 +23,8 @@ export default function UploadPage() {
   const handleUpdateProfile = async () => {
     setIsUpdating(true);
     try {
-      const res = await authFetch('http://127.0.0.1:8000/update-profile', {
-        method: 'POST',
+      const res = await authFetch('/me', {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           target_roles: [targetRole],
