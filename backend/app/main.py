@@ -254,7 +254,8 @@ async def run_analysis(user: models.User, db_resume: models.Resume, db: Session)
     """Core logic to calculate readiness, authenticity and strategy with DB caching."""
     # ── Role-Based Skill Requirements Caching ──
     # We combine target roles into a single key for caching
-    role_key = ", ".join(sorted(user.target_roles)) if user.target_roles else "General Technical"
+    target_roles = user.target_roles if user else []
+    role_key = ", ".join(sorted(target_roles)) if target_roles else "General Technical"
     
     # Check if this role configuration already exists in our knowledge base
     db_role = db.query(models.Role).filter(models.Role.name == role_key).first()
@@ -263,8 +264,8 @@ async def run_analysis(user: models.User, db_resume: models.Resume, db: Session)
         expected_skills = db_role.skill_graph
     else:
         # Generate new requirements and cache them forever
-        if user.target_roles:
-            expected_skills = await llm_service.generate_expected_skills(user.target_roles)
+        if target_roles:
+            expected_skills = await llm_service.generate_expected_skills(target_roles)
         else:
             expected_skills = {"Python": 5, "FastAPI": 4, "PostgreSQL": 4, "Docker": 3, "Git": 3, "AWS": 3}
             
