@@ -141,10 +141,19 @@ def get_dashboard_data(db: Session = Depends(get_db), current_user: models.User 
     if not last_resume:
         return {"has_resume": False}
     
+    # Find general readiness (Fallback)
     score = (
         db.query(models.ReadinessScore)
         .filter(models.ReadinessScore.resume_id == last_resume.id)
         .order_by(models.ReadinessScore.created_at.desc())
+        .first()
+    )
+
+    # Find latest JD match (Precision Dashboard)
+    latest_jd = (
+        db.query(models.ATSScore)
+        .filter(models.ATSScore.resume_id == last_resume.id)
+        .order_by(models.ATSScore.created_at.desc())
         .first()
     )
     
@@ -153,10 +162,11 @@ def get_dashboard_data(db: Session = Depends(get_db), current_user: models.User 
         "resume_id": last_resume.id,
         "filename": last_resume.filename,
         "skills": last_resume.skills,
-        "score": score.score if score else 0,
-        "authenticity_score": score.authenticity_score if score else 0,
-        "gap_analysis": score.gap_analysis if score else {"gaps": []}, # Hidden gaps removed
-        "ai_strategy": score.ai_strategy if score else "Focus on core tech fundamentals to improve readiness."
+        "score": latest_jd.score if latest_jd else (score.score if score else 0),
+        "authenticity_score": latest_jd.authenticity_score if latest_jd else (score.authenticity_score if score else 0),
+        "gap_analysis": {"gaps": latest_jd.gaps} if latest_jd else (score.gap_analysis if score else {"gaps": []}),
+        "ai_strategy": latest_jd.feedback if latest_jd else (score.ai_strategy if score else "Focus on core tech fundamentals to improve readiness."),
+        "jd_text": latest_jd.job_description if latest_jd else None
     }
 
 @app.post("/upload-resume")
@@ -343,6 +353,8 @@ async def match_job_description(request: schemas.JDMatchRequest, db: Session = D
         resume_id=last_resume.id,
         job_description=request.jd_text,
         score=readiness,
+        authenticity_score=round(auth_score, 1),
+        gaps=gaps,
         feedback=ai_strategy
     )
     db.add(db_ats)

@@ -42,6 +42,17 @@ export default function DashboardOverview() {
           gaps: json.gap_analysis?.gaps || [],
           authenticityScore: json.authenticity_score
         });
+
+        // Restore JD Match state if it exists
+        if (json.jd_text) {
+          setJdText(json.jd_text);
+          setJdResults({
+            readiness_score: json.score,
+            gaps: json.gap_analysis?.gaps || [],
+            authenticity_score: json.authenticity_score,
+            ai_strategy: json.ai_strategy
+          });
+        }
       }
     } catch (e) {
       console.error(e);

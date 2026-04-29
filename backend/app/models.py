@@ -97,6 +97,8 @@ class ATSScore(Base):
     resume_id = Column(Integer, ForeignKey("resumes.id"))
     job_description = Column(Text)
     score = Column(Float)
+    authenticity_score = Column(Float, default=0.0)
+    gaps = Column(JSON, default=[])
     feedback = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
