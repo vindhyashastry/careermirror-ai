@@ -1,76 +1,48 @@
 import httpx
-from sentence_transformers import SentenceTransformer
-import faiss
 import numpy as np
-
-model = SentenceTransformer('all-MiniLM-L6-v2')
+import re
 
 class JobService:
     def __init__(self):
-        self.model = model
+        # AI Models removed for memory optimization
         self.jobs_cache = []
-        self.index = None
+        self.last_fetch = None
 
     async def fetch_remote_jobs(self):
-        url = "https://remotive.com/api/remote-jobs?limit=50"
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url)
-            if response.status_code == 200:
-                data = response.json()
-                self.jobs_cache = data.get("jobs", [])
-                self._build_index()
-                return self.jobs_cache
-            return []
-
-    def _build_index(self):
-        if not self.jobs_cache:
-            return
-        
-        descriptions = [f"{j['title']} {j['category']} {j['description'][:500]}" for j in self.jobs_cache]
-        embeddings = self.model.encode(descriptions)
-        
-        dimension = embeddings.shape[1]
-        self.index = faiss.IndexFlatL2(dimension)
-        self.index.add(np.array(embeddings).astype('float32'))
+        """Mock remote job fetching."""
+        # In a real app, this would hit an API like JSearch or Adzuna
+        self.jobs_cache = [
+            {"id": 1, "title": "Fullstack Developer", "company": "TechCorp", "category": "Engineering", "description": "Looking for React and FastAPI experts."},
+            {"id": 2, "title": "Backend Engineer", "company": "DataSystems", "category": "Engineering", "description": "Python, PostgreSQL, and AWS knowledge required."},
+            {"id": 3, "title": "Frontend Lead", "company": "CreativeUI", "category": "Design", "description": "Master of Tailwind CSS and Next.js."},
+            {"id": 4, "title": "Python Developer", "company": "AI Innovators", "category": "AI", "description": "Build scalable APIs with Python and Docker."},
+            {"id": 5, "title": "DevOps Engineer", "company": "CloudCloud", "category": "Infrastructure", "description": "Manage Kubernetes clusters and CI/CD pipelines."},
+        ]
 
     def match_jobs(self, resume_text, user_skills=[], top_k=5):
-        if self.index is None or not self.jobs_cache:
+        """Simple keyword-based matching for job recommendations."""
+        if not self.jobs_cache:
             return []
+
+        resume_lower = resume_text.lower()
+        user_skills_lower = [s.lower() for s in user_skills]
+        
+        results = []
+        for job in self.jobs_cache:
+            score = 0
+            job_text = f"{job['title']} {job['category']} {job['description']}".lower()
             
-        resume_embedding = self.model.encode([resume_text])
-        distances, indices = self.index.search(np.array(resume_embedding).astype('float32'), top_k)
-        
-        matches = []
-        for i, idx in enumerate(indices[0]):
-            if idx < len(self.jobs_cache):
-                job = self.jobs_cache[idx]
+            # Count skill matches
+            for skill in user_skills_lower:
+                if skill in job_text:
+                    score += 10
+            
+            # Title match bonus
+            if any(word in job['title'].lower() for word in resume_lower.split()[:20]):
+                score += 20
                 
-                # Base similarity from vector search
-                base_sim = float(1 / (1 + distances[0][i]))
-                
-                # Skill-boost logic: check if job keywords match user skills
-                job_text = f"{job['title']} {job['category']} {job['description']}".lower()
-                skill_matches = 0
-                if user_skills:
-                    for skill in user_skills:
-                        if skill.lower() in job_text:
-                            skill_matches += 1
-                    
-                    skill_boost = min(0.3, (skill_matches / max(1, len(user_skills))) * 0.5)
-                else:
-                    skill_boost = 0
-                
-                # Final score: Combine base similarity with skill boost and normalize
-                # We aim to bring this closer to the 0.7-0.9 range for good matches
-                final_score = min(0.98, (base_sim * 0.7) + 0.3 + skill_boost)
-                
-                matches.append({
-                    "title": job["title"],
-                    "company": job["company_name"],
-                    "url": job["url"],
-                    "similarity": final_score
-                })
-        
-        # Sort by similarity
-        matches.sort(key=lambda x: x['similarity'], reverse=True)
-        return matches
+            results.append({**job, "match_score": score})
+            
+        # Sort by score and return top_k
+        results.sort(key=lambda x: x['match_score'], reverse=True)
+        return results[:top_k]

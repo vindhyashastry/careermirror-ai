@@ -2,17 +2,9 @@ import os
 import re
 import fitz  # PyMuPDF
 import docx
-import spacy
-from .ai_utils import get_embedding_model
+# SpaCy removed for memory optimization on Render Free Tier
+nlp = None 
 
-# ──────────────────────── Configuration ────────────────────────
-try:
-    nlp = spacy.load("en_core_web_md")
-except:
-    # Fallback if model not downloaded
-    print("⏳ Downloading SpaCy model (First time only)...")
-    os.system("python -m spacy download en_core_web_md")
-    nlp = spacy.load("en_core_web_md")
 
 # ──────────────────────── Skill Taxonomy ────────────────────────
 SKILL_TAXONOMY = {
@@ -207,15 +199,9 @@ class ResumeParser:
 
     # ──────────────── Embedding Generation ────────────────
     def generate_embedding(self, text: str) -> list:
-        """Generate a 384-dim semantic embedding for similarity matching."""
-        # Use first 512 words to keep it fast
-        model = get_embedding_model()
-        if not model:
-            return [0.0] * 384
-            
-        truncated = " ".join(text.split()[:512])
-        embedding = model.encode(truncated, normalize_embeddings=True)
-        return embedding.tolist()
+        """Embedding generation disabled for memory optimization."""
+        return [0.0] * 384
+
 
     # ──────────────── Master Parse ────────────────
     def parse(self, file_path: str) -> tuple:

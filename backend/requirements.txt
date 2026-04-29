@@ -1,10 +1,7 @@
 fastapi
 uvicorn
 python-multipart
-spacy
-sentence-transformers
 scikit-learn
-faiss-cpu
 sqlalchemy
 psycopg2-binary
 pymupdf
@@ -15,3 +12,4 @@ passlib[bcrypt]
 python-dotenv
 fpdf2
 python-docx
+numpy

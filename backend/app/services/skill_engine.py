@@ -1,50 +1,39 @@
-from sentence_transformers import util
-import torch
 import json
-from .ai_utils import get_embedding_model
 
 class SkillEngine:
     def __init__(self):
-        # We don't store the model here, we fetch it when needed to ensure lazy loading
+        # AI Models removed for memory optimization on Render Free Tier
         pass
 
     def calculate_readiness(self, extracted_skills, role_skills):
         """
         role_skills: Dict of skill: weight (1-5)
+        Simplified keyword-based matching to save memory.
         """
-        model = get_embedding_model()
-        if not model or not role_skills:
+        if not role_skills:
             return 0.0, []
 
+        extracted_set = set(s.lower() for s in extracted_skills)
         role_skills_list = list(role_skills.keys())
         
-        # Semantic matching for each role skill
         gaps = []
-        
-        # We use a higher threshold to avoid "skill drift" (e.g. Python != Java)
-        STRICT_THRESHOLD = 0.82 
-        
-        user_embeddings = model.encode(extracted_skills, convert_to_tensor=True)
-        role_embeddings = model.encode(role_skills_list, convert_to_tensor=True)
-        
-        cosine_scores = util.cos_sim(role_embeddings, user_embeddings)
-        
         weighted_score = 0
         total_possible_weight = sum(role_skills.values())
         
-        for i, role_skill in enumerate(role_skills_list):
-            max_sim = torch.max(cosine_scores[i]).item()
-            weight = role_skills[role_skill]
-            
-            if max_sim >= STRICT_THRESHOLD:
-                # Direct or very close match
+        for role_skill, weight in role_skills.items():
+            if role_skill.lower() in extracted_set:
                 weighted_score += weight
-            elif max_sim > 0.65:
-                # Partial/Related match (give 40% credit for tangential skills)
-                weighted_score += (weight * 0.4)
             else:
-                # Absolute gap
-                gaps.append(role_skill)
+                # Check for partial matches (e.g. "React" in "React.js")
+                matched = False
+                for user_skill in extracted_set:
+                    if role_skill.lower() in user_skill or user_skill in role_skill.lower():
+                        weighted_score += weight * 0.8 # Give 80% credit for close keywords
+                        matched = True
+                        break
+                
+                if not matched:
+                    gaps.append(role_skill)
                 
         readiness_percentage = (weighted_score / total_possible_weight) * 100 if total_possible_weight > 0 else 0
         return round(readiness_percentage, 1), gaps
