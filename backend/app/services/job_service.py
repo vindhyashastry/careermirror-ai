@@ -12,11 +12,11 @@ class JobService:
         """Mock remote job fetching."""
         # In a real app, this would hit an API like JSearch or Adzuna
         self.jobs_cache = [
-            {"id": 1, "title": "Fullstack Developer", "company": "TechCorp", "category": "Engineering", "description": "Looking for React and FastAPI experts."},
-            {"id": 2, "title": "Backend Engineer", "company": "DataSystems", "category": "Engineering", "description": "Python, PostgreSQL, and AWS knowledge required."},
-            {"id": 3, "title": "Frontend Lead", "company": "CreativeUI", "category": "Design", "description": "Master of Tailwind CSS and Next.js."},
-            {"id": 4, "title": "Python Developer", "company": "AI Innovators", "category": "AI", "description": "Build scalable APIs with Python and Docker."},
-            {"id": 5, "title": "DevOps Engineer", "company": "CloudCloud", "category": "Infrastructure", "description": "Manage Kubernetes clusters and CI/CD pipelines."},
+            {"id": 1, "title": "Fullstack Developer", "company": "TechCorp", "category": "Engineering", "description": "Looking for React and FastAPI experts.", "url": "https://linkedin.com/jobs/view/1"},
+            {"id": 2, "title": "Backend Engineer", "company": "DataSystems", "category": "Engineering", "description": "Python, PostgreSQL, and AWS knowledge required.", "url": "https://linkedin.com/jobs/view/2"},
+            {"id": 3, "title": "Frontend Lead", "company": "CreativeUI", "category": "Design", "description": "Master of Tailwind CSS and Next.js.", "url": "https://linkedin.com/jobs/view/3"},
+            {"id": 4, "title": "Python Developer", "company": "AI Innovators", "category": "AI", "description": "Build scalable APIs with Python and Docker.", "url": "https://linkedin.com/jobs/view/4"},
+            {"id": 5, "title": "DevOps Engineer", "company": "CloudCloud", "category": "Infrastructure", "description": "Manage Kubernetes clusters and CI/CD pipelines.", "url": "https://linkedin.com/jobs/view/5"},
         ]
 
     def match_jobs(self, resume_text, user_skills=[], top_k=5):
@@ -33,16 +33,20 @@ class JobService:
             job_text = f"{job['title']} {job['category']} {job['description']}".lower()
             
             # Count skill matches
+            match_count = 0
             for skill in user_skills_lower:
                 if skill in job_text:
-                    score += 10
+                    match_count += 1
+            
+            if user_skills_lower:
+                score += (match_count / len(user_skills_lower)) * 0.7
             
             # Title match bonus
-            if any(word in job['title'].lower() for word in resume_lower.split()[:20]):
-                score += 20
+            if any(word in job['title'].lower() for word in resume_lower.split()[:20] if len(word) > 3):
+                score += 0.3
                 
-            results.append({**job, "match_score": score})
+            results.append({**job, "similarity": min(1.0, score)})
             
-        # Sort by score and return top_k
-        results.sort(key=lambda x: x['match_score'], reverse=True)
+        # Sort by similarity and return top_k
+        results.sort(key=lambda x: x['similarity'], reverse=True)
         return results[:top_k]

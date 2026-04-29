@@ -62,11 +62,12 @@ export const AIAssistant = () => {
     }
   };
 
-  const sendMessage = async () => {
-    if (!input.trim() || loading) return;
+  const sendMessage = async (overrideMessage?: string) => {
+    if (loading) return;
+    const userMessage = overrideMessage || input.trim();
+    if (!userMessage) return;
 
-    const userMessage = input.trim();
-    setInput('');
+    if (!overrideMessage) setInput('');
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
     setLoading(true);
 
@@ -129,8 +130,8 @@ export const AIAssistant = () => {
             <div className="px-6 py-4 flex gap-2 overflow-x-auto custom-scrollbar-hide bg-white/50">
               {[
                 { label: 'ATS Score', icon: ShieldCheck, action: handleATSScore },
-                { label: 'GitHub Audit', icon: Send, action: () => setInput('Analyze my GitHub: https://github.com/') },
-                { label: 'Project Ideas', icon: MessageSquare, action: () => { setInput('Suggest 3 trending project ideas for my profile.'); sendMessage(); } }
+                { label: 'GitHub Audit', icon: Send, action: () => { setInput('Analyze my GitHub: https://github.com/'); } },
+                { label: 'Project Ideas', icon: MessageSquare, action: () => { sendMessage('Suggest 3 trending project ideas for my profile.'); } }
               ].map((item, i) => (
                 <button
                   key={i}
@@ -184,7 +185,7 @@ export const AIAssistant = () => {
                   className="flex-1 bg-transparent border-none outline-none px-4 text-sm font-bold text-slate-700 placeholder:text-slate-400"
                 />
                 <button
-                  onClick={sendMessage}
+                  onClick={() => sendMessage()}
                   disabled={loading || !input.trim()}
                   className="w-12 h-12 bg-primary text-primary-foreground rounded-[1.2rem] flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 disabled:opacity-50 transition-all"
                 >

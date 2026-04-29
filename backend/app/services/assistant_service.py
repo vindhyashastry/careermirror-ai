@@ -27,9 +27,14 @@ class AssistantService:
         """
         response = await self.llm._call_llm(prompt)
         try:
-            return json.loads(response)
+            # Handle potential markdown code block wrapping
+            clean_response = response.replace("```json", "").replace("```", "").strip()
+            parsed = json.loads(clean_response)
+            if not parsed.get("reply"):
+                parsed["reply"] = "I couldn't generate a specific response for that. Could you rephrase your question?"
+            return parsed
         except:
-            return {"reply": response, "type": "text"}
+            return {"reply": "I encountered an error while thinking about that. Could you try rephrasing?", "type": "text"}
 
     def calculate_ats_metrics(self, resume_data, raw_text=""):
         # Real-world ATS heuristics

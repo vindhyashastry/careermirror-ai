@@ -29,36 +29,29 @@ class LLMService:
             messages.append({"role": "system", "content": system_msg})
         messages.append({"role": "user", "content": prompt})
         
+        # Groq requires "JSON" to be in the prompt if response_format is json_object
+        if format_json and "json" not in prompt.lower():
+            prompt += "\n\nResponse must be a valid JSON object."
+
         payload = {
             "model": "llama-3.1-8b-instant" if not system_msg else GROQ_MODEL,
             "messages": messages,
             "temperature": 0.0,
             "response_format": {"type": "json_object"} if format_json else None
         }
-        
+
         async with httpx.AsyncClient(timeout=60.0) as client:
             try:
                 response = await client.post(url, headers=headers, json=payload)
                 if response.status_code == 200:
                     result = response.json()
                     content = result["choices"][0]["message"]["content"]
-                    # Clean markdown if present
-                    if "```json" in content:
-                        content = content.split("```json")[1].split("```")[0].strip()
-                    elif "```" in content:
-                        content = content.split("```")[1].split("```")[0].strip()
                     return content.strip()
-                elif response.status_code == 401:
-                    print("❌ Groq API Error: Invalid API Key. Please check your .env file.")
                 else:
                     print(f"❌ Groq API Error: {response.status_code} - {response.text}")
-            except httpx.ConnectError:
-                print("❌ Network Error: Could not connect to Groq API. Check your internet or firewall.")
-            except httpx.TimeoutException:
-                print("❌ Timeout Error: Groq API took too long to respond. Retrying might help.")
             except Exception as e:
-                print(f"❌ Unexpected Connection Error: {type(e).__name__} - {e}")
-        return "{}"
+                print(f"❌ Connection Error: {e}")
+        return json.dumps({"reply": "I'm currently overloaded. Please try again in a moment.", "type": "text"})
 
     async def generate_questions(self, role, weak_skills, difficulty="intermediate", language="Python"):
         prompt = f"""
