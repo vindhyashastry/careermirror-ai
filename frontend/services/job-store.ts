@@ -5,6 +5,7 @@ export interface JobMatch {
   company: string;
   location?: string;
   url: string;
+  logo?: string;
   similarity: number;
 }
 

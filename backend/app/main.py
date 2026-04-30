@@ -408,7 +408,11 @@ async def match_jobs(resume_id: int, db: Session = Depends(get_db)):
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
     
-    await job_service.fetch_remote_jobs()
+    # Get user to see target roles
+    user = db.query(models.User).filter(models.User.id == resume.user_id).first()
+    search_query = user.target_roles[0] if user and user.target_roles else "Software Engineer"
+    
+    await job_service.fetch_remote_jobs(query=search_query)
     matches = job_service.match_jobs(resume.raw_text, user_skills=resume.skills)
     return matches
 

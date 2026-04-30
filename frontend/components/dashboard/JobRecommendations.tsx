@@ -105,9 +105,18 @@ export const JobRecommendations = () => {
                 </div>
               </div>
 
-              {/* Icon Section */}
-              <div className="w-10 h-10 bg-muted rounded-xl flex items-center justify-center mb-4 shadow-inner group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                <Briefcase className="text-primary" size={18} />
+              {/* Icon/Logo Section */}
+              <div className="w-12 h-12 bg-muted rounded-xl flex items-center justify-center mb-4 shadow-inner group-hover:scale-105 transition-all duration-300 overflow-hidden border border-border/10">
+                {job.logo ? (
+                  <img 
+                    src={job.logo} 
+                    alt={job.company} 
+                    className="w-full h-full object-contain p-1"
+                    onError={(e) => (e.currentTarget.src = "")} // Fallback logic handled by CSS/Layout
+                  />
+                ) : (
+                  <Briefcase className="text-primary/40" size={20} />
+                )}
               </div>
 
               {/* Content */}
