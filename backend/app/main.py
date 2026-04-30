@@ -169,6 +169,13 @@ def get_dashboard_data(db: Session = Depends(get_db), current_user: models.User 
         "jd_text": latest_jd.job_description if latest_jd else None
     }
 
+@app.get("/market-heatmap")
+async def get_market_heatmap(db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    last_resume = db.query(models.Resume).filter(models.Resume.user_id == current_user.id).order_by(models.Resume.created_at.desc()).first()
+    user_skills = last_resume.skills if last_resume else []
+    data = await llm_service.generate_market_heatmap(user_skills)
+    return data
+
 @app.post("/upload-resume")
 async def upload_resume(request: Request, file: UploadFile = File(...), db: Session = Depends(get_db)):
     # ── Auth (optional — allow anonymous for now) ──
