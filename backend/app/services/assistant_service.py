@@ -10,31 +10,40 @@ class AssistantService:
         self.llm = LLMService()
 
     async def chat(self, user_message, resume_data, role):
+        system_msg = f"You are Mirror AI, a senior Career Strategist. User Role: {role}. You provide actionable, high-impact career advice."
         prompt = f"""
-        [CONTEXT] You are Mirror AI, a Career Strategist.
-        [USER ROLE] {role}
         [USER RESUME DATA] {json.dumps(resume_data)}
         
         [USER MESSAGE] {user_message}
         
         [STRICT RULES]
-        1. RESPONSE FORMAT: Always use bullet points for lists. Use bold headers for sections. Keep it professional.
-        2. PROJECT VETTING: If asked for project ideas, detect if their current projects are 'generic' (e.g. To-Do list). 
-           Suggest 3 'Trending' and 'Non-Repetitive' projects.
+        1. If asked for project ideas:
+           - Analyze their current projects.
+           - Suggest exactly 3 UNIQUE and ADVANCED project ideas.
+           - For each idea, provide a Title, Tech Stack, and Core Innovation.
+           - Format these clearly using Markdown bullet points and bold text within the 'reply' string.
+        2. Keep the response professional and concise.
         3. No conversational filler.
         
         Return a JSON object with: 'reply' (string), 'type' ('text' or 'project_ideas').
         """
-        response = await self.llm._call_llm(prompt)
+        response = await self.llm._call_llm(prompt, system_msg=system_msg)
         try:
             # Handle potential markdown code block wrapping
             clean_response = response.replace("```json", "").replace("```", "").strip()
+            # If the response contains text before or after the JSON, try to extract the JSON part
+            if "{" in clean_response and "}" in clean_response:
+                start = clean_response.find("{")
+                end = clean_response.rfind("}") + 1
+                clean_response = clean_response[start:end]
+                
             parsed = json.loads(clean_response)
             if not parsed.get("reply"):
-                parsed["reply"] = "I couldn't generate a specific response for that. Could you rephrase your question?"
+                parsed["reply"] = "I couldn't generate a specific response. Could you try asking again?"
             return parsed
-        except:
-            return {"reply": "I encountered an error while thinking about that. Could you try rephrasing?", "type": "text"}
+        except Exception as e:
+            print(f"Assistant Parse Error: {e} | Raw: {response}")
+            return {"reply": response if len(response) > 10 else "I'm having trouble formatting my response. Please try again.", "type": "text"}
 
     def calculate_ats_metrics(self, resume_data, raw_text=""):
         # Real-world ATS heuristics
