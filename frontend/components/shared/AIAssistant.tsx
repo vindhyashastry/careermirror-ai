@@ -5,10 +5,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, X, Send, Sparkles, Loader2, ShieldCheck } from 'lucide-react';
 import { authFetch, useAuthStore } from '@/services/auth-store';
 import { toast } from 'sonner';
+import { usePathname } from 'next/navigation';
 import { API_BASE } from '@/lib/api';
 
 export const AIAssistant = () => {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+
+  // Only show in dashboard
+  if (!pathname?.startsWith('/dashboard')) return null;
   const [messages, setMessages] = useState<{ role: string, content: string }[]>([
     { role: 'assistant', content: 'Hi there! Im your CareerMirror AI Assistant. Ask me anything about your resume, market trends, or interview prep.' }
   ]);
